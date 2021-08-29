@@ -25,13 +25,6 @@ app = Flask(__name__)
 
 #Route home
 @app.route("/")
-#def Home():
-    #return(f"Available Routes:<br/>"
-           #f"/api/v1.0/precipitation<br/>"
-           #f"/api/v1.0/stations<br/>"
-           #f"/api/v1.0/tobs<br/>"
-           #f"/api/v1.0/temp/start/end")
-
 def home():
     homepageHTML = (
         f"<h1>Welcome to the Hawaii Climate Analysis API!</h1>"
@@ -94,13 +87,26 @@ def tobs():
 @app.route("/api/v1.0/temp/<start>/<end>")
 def start_and_end(start='YYYY-MM-DD', end='YYYY-MM-DD'):
     session = Session(engine)
-    sel = [func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)]
+    sel = [func.min(Measurement.tobs), func.max(Measurement.tobs), func.avg(Measurement.tobs)]
     if not end:
         results = session.query(*sel).filter(Measurement.date >= start).all()
-        temps = list(np.ravel(results))
-        return jsonify(temps)        
+        temp_list = []
+        for temp_min, temp_max, temp_avg in results:
+            temp_list.append({
+            "Min":temp_min,
+            "Max":temp_max,
+            "Average":temp_avg
+        })
+        return jsonify(temp_list)        
     results = session.query(*sel).filter(Measurement.date >= start).filter(Measurement.date <= end).all()
-    return jsonify(results)
+    temp_list = []
+    for temp_min, temp_max, temp_avg in results:
+        temp_list.append({
+        "Min":temp_min,
+        "Max":temp_max,
+        "Average":temp_avg
+    })
+    return jsonify(temp_list)
 
 if __name__ == '__main__':
     app.run(debug=True) 
